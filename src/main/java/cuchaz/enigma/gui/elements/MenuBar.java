@@ -24,6 +24,7 @@ public class MenuBar extends JMenuBar {
 	public final JMenuItem closeJarMenu;
 	public final JMenuItem openEnigmaMappingsMenu;
 	public final JMenuItem openTinyMappingsMenu;
+	public final JMenuItem openTinyV2MappingsMenu;
 	public final JMenuItem saveMappingsMenu;
 	public final JMenuItem saveMappingEnigmaFileMenu;
 	public final JMenuItem saveMappingEnigmaDirectoryMenu;
@@ -82,6 +83,17 @@ public class MenuBar extends JMenuBar {
 					}
 				});
 				this.openTinyMappingsMenu = item;
+
+				item = new JMenuItem("Tiny V2");
+				openMenu.add(item);
+				item.addActionListener(event -> {
+					this.gui.tinyMappingsFileChooser.setVisible(true);
+					File file = new File(this.gui.tinyMappingsFileChooser.getDirectory() + File.separator + this.gui.tinyMappingsFileChooser.getFile());
+					if (file.exists()) {
+						this.gui.getController().openMappings(MappingFormat.TINY_V2, file.toPath());
+					}
+				});
+				this.openTinyV2MappingsMenu = item;
 			}
 			{
 				JMenuItem item = new JMenuItem("Save Mappings");
