@@ -59,7 +59,7 @@ public final class TinyV2Writer implements MappingsWriter {
 			if (mapping != null) {
 				parts.addFirst(mapping.getTargetName());
 			} else {
-				parts.addFirst(classEntry.getFullName());
+				parts.addFirst("");
 				break;
 			}
 			classEntry = classEntry.getOuterClass();
