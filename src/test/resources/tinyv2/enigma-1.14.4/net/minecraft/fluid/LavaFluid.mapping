@@ -1,3 +1,0 @@
-CLASS net/minecraft/class_3616 net/minecraft/fluid/LavaFluid
-	CLASS class_3617 Flowing
-	CLASS class_3618 Still
