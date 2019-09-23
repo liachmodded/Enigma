@@ -54,14 +54,14 @@ public final class TinyV2Writer implements MappingsWriter {
 		ClassEntry classEntry = (ClassEntry) node.getEntry();
 		writer.print(classEntry.getFullName());
 		Deque<String> parts = new LinkedList<>();
-		boolean useIntermediary = false;
+		boolean nameInLine = false;
 		do {
 			EntryMapping mapping = tree.get(classEntry);
 			if (mapping != null) {
 				parts.addFirst(mapping.getTargetName());
-				useIntermediary = true;
+				nameInLine = true;
 			} else {
-				if(useIntermediary){
+				if (nameInLine) {
 					parts.addFirst(classEntry.getFullName());
 					// This is an extreme edge case - the inner class has a mapping but the outer does not.
 					// in this case we "give up" and use the intermediary name.
@@ -69,7 +69,7 @@ public final class TinyV2Writer implements MappingsWriter {
 					// we could be stuck with only the inner class part without the package path or enclosing class,
 					// And if we set the entire result string to "" in case there is no mapping here, we could lose some information
 					// about the mapping inner class.
-				}else{
+				} else {
 					parts.addFirst("");
 				}
 
