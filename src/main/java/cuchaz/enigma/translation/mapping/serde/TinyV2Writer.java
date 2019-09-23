@@ -52,7 +52,8 @@ public final class TinyV2Writer implements MappingsWriter {
 	private void writeClass(PrintWriter writer, EntryTreeNode<EntryMapping> node, EntryMap<EntryMapping> tree) {
 		writer.print("c\t");
 		ClassEntry classEntry = (ClassEntry) node.getEntry();
-		writer.print(classEntry.getFullName());
+		String fullName = classEntry.getFullName();
+		writer.print(fullName);
 		Deque<String> parts = new LinkedList<>();
 		do {
 			EntryMapping mapping = tree.get(classEntry);
@@ -63,8 +64,14 @@ public final class TinyV2Writer implements MappingsWriter {
 			}
 			classEntry = classEntry.getOuterClass();
 		} while (classEntry != null);
-		writer.print("\t");
-		writer.println(String.join("$", parts));
+
+		String mappedName = String.join("$", parts);
+
+		if (!fullName.equals(mappedName)) {
+			writer.print("\t");
+			writer.print(mappedName);
+		}
+		writer.println();
 
 		writeComment(writer, node.getValue(), 1);
 
