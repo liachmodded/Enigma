@@ -14,6 +14,7 @@ import com.strobel.decompiler.languages.java.ast.AstBuilder;
 import com.strobel.decompiler.languages.java.ast.CompilationUnit;
 import com.strobel.decompiler.languages.java.ast.InsertParenthesesVisitor;
 import com.strobel.decompiler.languages.java.ast.transforms.IAstTransform;
+import com.strobel.decompiler.languages.java.ast.transforms.InsertNecessaryConversionsTransform;
 import cuchaz.enigma.utils.Utils;
 import oml.ast.transformers.*;
 
@@ -71,7 +72,7 @@ public class SourceProvider {
 
 		AstBuilder builder = new AstBuilder(context);
 		builder.addType(resolvedType);
-		builder.runTransformations(null);
+		builder.runTransformations(transform -> !(transform instanceof InsertNecessaryConversionsTransform)); // todo let's dont crash yet
 		runCustomTransforms(builder, context);
 
 		return builder.getCompilationUnit();

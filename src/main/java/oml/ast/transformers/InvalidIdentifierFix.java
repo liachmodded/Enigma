@@ -23,6 +23,11 @@ public class InvalidIdentifierFix implements IAstTransform {
 				newIdentifier.copyUserDataFrom(node);
 				node.replaceWith(newIdentifier);
 			}
+			if (node.getName().indexOf('$') != -1) {
+				Identifier newIdentifier = Identifier.create(node.getName().replace('$', '_'));
+				newIdentifier.copyUserDataFrom(node);
+				node.replaceWith(newIdentifier);
+			}
 			return null;
 		}
 	}

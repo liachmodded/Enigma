@@ -241,7 +241,7 @@ final class TinyV2Reader implements MappingsReader {
 
 		// tokens[2] is the useless obf name
 
-		LocalVariableEntry obfuscatedEntry = new LocalVariableEntry(ownerMethod, variableIndex, "", true);
+		LocalVariableEntry obfuscatedEntry = new LocalVariableEntry(ownerMethod, variableIndex, "", -1);
 		if (tokens.length <= 3)
 			return new MappingPair<>(obfuscatedEntry);
 		String mapping = unescapeOpt(tokens[3], escapeNames);

@@ -15,16 +15,16 @@ import javax.annotation.Nullable;
 public class LocalVariableEntry extends ParentedEntry<MethodEntry> implements Comparable<LocalVariableEntry> {
 
 	protected final int index;
-	protected final boolean parameter;
+	protected final int startOffset;
 
-	public LocalVariableEntry(MethodEntry parent, int index, String name, boolean parameter) {
+	public LocalVariableEntry(MethodEntry parent, int index, String name, int startOffset) {
 		super(parent, name);
 
 		Preconditions.checkNotNull(parent, "Variable owner cannot be null");
 		Preconditions.checkArgument(index >= 0, "Index must be positive");
 
 		this.index = index;
-		this.parameter = parameter;
+		this.startOffset = startOffset;
 	}
 
 	@Override
@@ -33,7 +33,7 @@ public class LocalVariableEntry extends ParentedEntry<MethodEntry> implements Co
 	}
 
 	public boolean isArgument() {
-		return this.parameter;
+		return this.startOffset < 0;
 	}
 
 	public int getIndex() {
@@ -48,17 +48,17 @@ public class LocalVariableEntry extends ParentedEntry<MethodEntry> implements Co
 	@Override
 	public LocalVariableEntry translate(Translator translator, @Nullable EntryMapping mapping) {
 		String translatedName = mapping != null ? mapping.getTargetName() : name;
-		return new LocalVariableEntry(parent, index, translatedName, parameter);
+		return new LocalVariableEntry(parent, index, translatedName, startOffset);
 	}
 
 	@Override
 	public LocalVariableEntry withName(String name) {
-		return new LocalVariableEntry(parent, index, name, parameter);
+		return new LocalVariableEntry(parent, index, name, startOffset);
 	}
 
 	@Override
 	public LocalVariableEntry withParent(MethodEntry parent) {
-		return new LocalVariableEntry(parent, index, name, parameter);
+		return new LocalVariableEntry(parent, index, name, startOffset);
 	}
 
 	@Override
