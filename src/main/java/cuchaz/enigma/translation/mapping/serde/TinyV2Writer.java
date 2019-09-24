@@ -67,8 +67,8 @@ public final class TinyV2Writer implements MappingsWriter {
 
 		String mappedName = String.join("$", parts);
 
+		writer.print("\t");
 		if (!fullName.equals(mappedName)) {
-			writer.print("\t");
 			writer.print(mappedName);
 		}
 		writer.println();
@@ -94,7 +94,7 @@ public final class TinyV2Writer implements MappingsWriter {
 		writer.print("\t");
 		EntryMapping mapping = node.getValue();
 		if (mapping == null) {
-			writer.println(node.getEntry().getName());
+			writer.println();
 		} else {
 			writer.println(mapping.getTargetName());
 
@@ -106,6 +106,7 @@ public final class TinyV2Writer implements MappingsWriter {
 			if (entry instanceof LocalVariableEntry) {
 				writeParameter(writer, child);
 			}
+			// TODO write actual local variables
 		}
 	}
 
@@ -121,7 +122,7 @@ public final class TinyV2Writer implements MappingsWriter {
 		writer.print("\t");
 		EntryMapping mapping = node.getValue();
 		if (mapping == null) {
-			writer.println(node.getEntry().getName());
+			writer.println();
 		} else {
 			writer.println(mapping.getTargetName());
 
@@ -141,7 +142,7 @@ public final class TinyV2Writer implements MappingsWriter {
 		writer.print("\t");
 		EntryMapping mapping = node.getValue();
 		if (mapping == null) {
-			writer.println(node.getEntry().getName());
+			writer.println();
 		} else {
 			writer.println(mapping.getTargetName());
 

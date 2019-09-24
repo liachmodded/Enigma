@@ -2,9 +2,7 @@ package cuchaz.enigma.translation.mapping.serde;
 
 import cuchaz.enigma.translation.mapping.AccessModifier;
 import cuchaz.enigma.translation.mapping.EntryMapping;
-
-import java.util.ArrayList;
-import java.util.List;
+import joptsimple.internal.Strings;
 
 final class RawEntryMapping {
 	private final String targetName;
@@ -20,6 +18,6 @@ final class RawEntryMapping {
 	}
 
 	EntryMapping bake() {
-		return new EntryMapping(targetName, access);
+		return Strings.isNullOrEmpty(targetName) ? null : new EntryMapping(targetName, access);
 	}
 }

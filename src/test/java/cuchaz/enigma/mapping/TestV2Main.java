@@ -13,12 +13,13 @@ import java.nio.file.Paths;
 
 public final class TestV2Main {
 	public static void main(String... args) throws Exception {
-		Path path = Paths.get(TestV2Main.class.getResource("/tinyV2InnerClasses/").toURI());
+//		Path path = Paths.get(TestV2Main.class.getResource("/tinyV2InnerClasses/").toURI());
+		Path path = Paths.get("C:/code/yarn/mappings");
 
 		MappingSaveParameters parameters = new MappingSaveParameters(MappingFileNameFormat.BY_DEOBF);
 
 		EntryTree<EntryMapping> tree = EnigmaMappingsReader.DIRECTORY.read(path, ProgressListener.none(), parameters);
 
-		new TinyV2Writer("obf", "deobf").write(tree, Paths.get("innerClasses.tiny"), ProgressListener.none(), parameters);
+		new TinyV2Writer("obf", "deobf").write(tree, Paths.get("currentYarn.tiny"), ProgressListener.none(), parameters);
 	}
 }

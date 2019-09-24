@@ -57,7 +57,7 @@ final class TinyV2Reader implements MappingsReader {
 				while (line.charAt(indent) == '\t')
 					indent++;
 
-				String[] parts = line.substring(indent).split("\t");
+				String[] parts = line.substring(indent).split("\t", -1);
 				if (parts.length == 0 || indent >= INDENT_CLEAR_START.length)
 					throw new IllegalArgumentException("Invalid format");
 
@@ -67,7 +67,10 @@ final class TinyV2Reader implements MappingsReader {
 					if (holds[i] != null) {
 						RawEntryMapping mapping = holds[i].getMapping();
 						if (mapping != null) {
-							mappings.insert(holds[i].getEntry(), mapping.bake());
+							EntryMapping baked = mapping.bake();
+							if (baked != null) {
+								mappings.insert(holds[i].getEntry(), baked);
+							}
 						}
 						holds[i] = null;
 					}
@@ -90,7 +93,7 @@ final class TinyV2Reader implements MappingsReader {
 								break;
 							case "c": // class
 								state.set(IN_CLASS);
-								holds[IN_CLASS] = parseClass(parts);
+								holds[IN_CLASS] = parseClass(parts, escapeNames);
 								break;
 							default:
 								unsupportKey(parts);
@@ -110,11 +113,11 @@ final class TinyV2Reader implements MappingsReader {
 							switch (parts[0]) {
 								case "m": // method
 									state.set(IN_METHOD);
-									holds[IN_METHOD] = parseMethod(holds[IN_CLASS], parts);
+									holds[IN_METHOD] = parseMethod(holds[IN_CLASS], parts, escapeNames);
 									break;
 								case "f": // field
 									state.set(IN_FIELD);
-									holds[IN_FIELD] = parseField(holds[IN_CLASS], parts);
+									holds[IN_FIELD] = parseField(holds[IN_CLASS], parts, escapeNames);
 									break;
 								case "c": // class javadoc
 									addJavadoc(holds[IN_CLASS], parts);
@@ -131,10 +134,10 @@ final class TinyV2Reader implements MappingsReader {
 							switch (parts[0]) {
 								case "p": // parameter
 									state.set(IN_PARAMETER);
-									holds[IN_PARAMETER] = parseArgument(holds[IN_METHOD], parts);
+									holds[IN_PARAMETER] = parseArgument(holds[IN_METHOD], parts, escapeNames);
 									break;
 								case "v": // local variable
-									// Can't do anything yet
+									// TODO add local var mapping
 									break;
 								case "c": // method javadoc
 									addJavadoc(holds[IN_METHOD], parts);
@@ -201,37 +204,38 @@ final class TinyV2Reader implements MappingsReader {
 //		mapping.addJavadocLine(javadoc); todo javadocs
 	}
 
-	private MappingPair<ClassEntry, RawEntryMapping> parseClass(String[] tokens) {
-		ClassEntry obfuscatedEntry = new ClassEntry(tokens[1]);
+	private MappingPair<ClassEntry, RawEntryMapping> parseClass(String[] tokens, boolean escapeNames) {
+		ClassEntry obfuscatedEntry = new ClassEntry(unescapeOpt(tokens[1], escapeNames));
 		if (tokens.length <= 2)
 			return new MappingPair<>(obfuscatedEntry);
-		String mapping = tokens[2].substring(tokens[2].lastIndexOf('$') + 1);
+		String token2 = unescapeOpt(tokens[2], escapeNames);
+		String mapping = token2.substring(token2.lastIndexOf('$') + 1);
 		return new MappingPair<>(obfuscatedEntry, new RawEntryMapping(mapping));
 	}
 
-	private MappingPair<FieldEntry, RawEntryMapping> parseField(MappingPair<? extends Entry, RawEntryMapping> parent, String[] tokens) {
+	private MappingPair<FieldEntry, RawEntryMapping> parseField(MappingPair<? extends Entry, RawEntryMapping> parent, String[] tokens, boolean escapeNames) {
 		ClassEntry ownerClass = (ClassEntry) parent.getEntry();
-		TypeDescriptor descriptor = new TypeDescriptor(tokens[1]);
+		TypeDescriptor descriptor = new TypeDescriptor(unescapeOpt(tokens[1], escapeNames));
 
-		FieldEntry obfuscatedEntry = new FieldEntry(ownerClass, tokens[2], descriptor);
+		FieldEntry obfuscatedEntry = new FieldEntry(ownerClass, unescapeOpt(tokens[2], escapeNames), descriptor);
 		if (tokens.length <= 3)
 			return new MappingPair<>(obfuscatedEntry);
-		String mapping = tokens[3];
+		String mapping = unescapeOpt(tokens[3], escapeNames);
 		return new MappingPair<>(obfuscatedEntry, new RawEntryMapping(mapping));
 	}
 
-	private MappingPair<MethodEntry, RawEntryMapping> parseMethod(MappingPair<? extends Entry, RawEntryMapping> parent, String[] tokens) {
+	private MappingPair<MethodEntry, RawEntryMapping> parseMethod(MappingPair<? extends Entry, RawEntryMapping> parent, String[] tokens, boolean escapeNames) {
 		ClassEntry ownerClass = (ClassEntry) parent.getEntry();
-		MethodDescriptor descriptor = new MethodDescriptor(tokens[1]);
+		MethodDescriptor descriptor = new MethodDescriptor(unescapeOpt(tokens[1], escapeNames));
 
-		MethodEntry obfuscatedEntry = new MethodEntry(ownerClass, tokens[2], descriptor);
+		MethodEntry obfuscatedEntry = new MethodEntry(ownerClass, unescapeOpt(tokens[2], escapeNames), descriptor);
 		if (tokens.length <= 3)
 			return new MappingPair<>(obfuscatedEntry);
-		String mapping = tokens[3];
+		String mapping = unescapeOpt(tokens[3], escapeNames);
 		return new MappingPair<>(obfuscatedEntry, new RawEntryMapping(mapping));
 	}
 
-	private MappingPair<LocalVariableEntry, RawEntryMapping> parseArgument(MappingPair<? extends Entry, RawEntryMapping> parent, String[] tokens) {
+	private MappingPair<LocalVariableEntry, RawEntryMapping> parseArgument(MappingPair<? extends Entry, RawEntryMapping> parent, String[] tokens, boolean escapeNames) {
 		MethodEntry ownerMethod = (MethodEntry) parent.getEntry();
 		int variableIndex = Integer.parseInt(tokens[1]);
 
@@ -240,7 +244,43 @@ final class TinyV2Reader implements MappingsReader {
 		LocalVariableEntry obfuscatedEntry = new LocalVariableEntry(ownerMethod, variableIndex, "", true);
 		if (tokens.length <= 3)
 			return new MappingPair<>(obfuscatedEntry);
-		String mapping = tokens[3];
+		String mapping = unescapeOpt(tokens[3], escapeNames);
 		return new MappingPair<>(obfuscatedEntry, new RawEntryMapping(mapping));
+	}
+
+	private static final String TO_ESCAPE = "\\\n\r\0\t";
+	private static final String ESCAPED = "\\nr0t";
+
+	private static String unescapeOpt(String raw, boolean escapedStrings) {
+		return escapedStrings ? unescape(raw) : raw;
+	}
+
+	private static String unescape(String str) {
+		// copied from matcher, lazy!
+		int pos = str.indexOf('\\');
+		if (pos < 0) return str;
+
+		StringBuilder ret = new StringBuilder(str.length() - 1);
+		int start = 0;
+
+		do {
+			ret.append(str, start, pos);
+			pos++;
+			int type;
+
+			if (pos >= str.length()) {
+				throw new RuntimeException("incomplete escape sequence at the end");
+			} else if ((type = ESCAPED.indexOf(str.charAt(pos))) < 0) {
+				throw new RuntimeException("invalid escape character: \\" + str.charAt(pos));
+			} else {
+				ret.append(TO_ESCAPE.charAt(type));
+			}
+
+			start = pos + 1;
+		} while ((pos = str.indexOf('\\', start)) >= 0);
+
+		ret.append(str, start, str.length());
+
+		return ret.toString();
 	}
 }
